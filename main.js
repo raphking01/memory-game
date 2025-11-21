@@ -12,23 +12,26 @@ updateLevel();
 const game = document.getElementById("game");
 const scoreDisplay = document.getElementById("score");
 const flash = document.getElementById("flash-overlay");
+
+// 🎵 musique de fond
 const music = new Audio("music.mp3");
 music.loop = true;
 music.volume = 0.4;
 
-let firstCard = null;
-let secondCard = null;
+let musicStarted = false;
+
+// Liste des cartes sélectionnées (3 cartes)
+let selectedCards = [];
 let lock = false;
 let cards = [];
-let musicStarted = false;
 
 // Générer les cartes selon le level
 function generateSymbols(level) {
-    let pairs = 4 + level; // augmente le nombre de paires
+    let triple = 6 + level; // augmente les symboles en fonction du niveau
     let emojis = ["🍎","🍌","🍇","🍒","🍉","🍋","🥝","🍓","🫐","🍍","🥥","🍑"];
 
-    let chosen = emojis.slice(0, pairs);
-    let finalSymbols = [...chosen, ...chosen]; // duplique pour faire des paires
+    let chosen = emojis.slice(0, triple);
+    let finalSymbols = [...chosen, ...chosen, ...chosen]; // 3 exemplaires
 
     return finalSymbols.sort(() => Math.random() - 0.5);
 }
@@ -38,8 +41,10 @@ function updateScore() {
     scoreDisplay.textContent = "Score: " + score;
 }
 
+// Lancer la musique au premier clic
 function startMusic() {
     if (musicStarted) return;
+
     music.play().then(() => {
         musicStarted = true;
     }).catch(() => {
@@ -71,23 +76,21 @@ function checkWin() {
 
     if (remaining.length === 0) {
         setTimeout(() => {
-
             document.getElementById("win-level").textContent =
                 "Level " + level + " Completed !";
 
             document.getElementById("win-screen").style.display = "flex";
-
-            soundWin.play(); // son victoire
-
         }, 500);
     }
 }
+
+// Bouton "Next level"
 document.getElementById("next-level-btn").addEventListener("click", () => {
 
     document.getElementById("win-screen").style.display = "none";
 
     level++;
-    if (level > 10) { 
+    if (level > 10) {
         alert("🔥 All levels completed ! Resetting...");
         level = 1;
     }
@@ -96,11 +99,12 @@ document.getElementById("next-level-btn").addEventListener("click", () => {
 });
 
 // =====================
-//   LANCER LE JEUX
+//   LANCER LE JEU
 // =====================
 function startGame() {
     game.innerHTML = "";
     cards = [];
+    selectedCards = [];
 
     let symbols = generateSymbols(level);
     updateLevel();
@@ -112,48 +116,93 @@ function startGame() {
         card.textContent = "?";
 
         card.addEventListener("click", () => {
-            if (lock || card === firstCard) return;
+            if (lock || card.classList.contains("flipped")) return;
+
             startMusic();
 
             card.classList.add("flipped");
             card.textContent = symbol;
 
-            if (!firstCard) {
-                firstCard = card;
-            } else {
-                secondCard = card;
+            selectedCards.push(card);
+
+            // ---------------------------
+            // 🟦 1) Vérifier les 2 premières cartes
+            // ---------------------------
+            if (selectedCards.length === 2) {
+
+                let s1 = selectedCards[0].dataset.symbol;
+                let s2 = selectedCards[1].dataset.symbol;
+
+                if (s1 !== s2) {
+                    // ❌ Pas pareilles → on retourne immédiatement
+                    lock = true;
+
+                    setTimeout(() => {
+                        flashEffect("flash-fail");
+
+                        selectedCards.forEach(c => {
+                            c.classList.remove("flipped");
+                            c.textContent = "?";
+                        });
+
+                        selectedCards = [];
+                        lock = false;
+
+                    }, 700);
+                }
+
+                return; // On attend la 3ᵉ carte
+            }
+
+            // ---------------------------
+            // 🟩 2) Vérification finale : 3 cartes
+            // ---------------------------
+            if (selectedCards.length === 3) {
+
                 lock = true;
 
                 setTimeout(() => {
-                    if (firstCard.dataset.symbol === secondCard.dataset.symbol) {
+
+                    let s1 = selectedCards[0].dataset.symbol;
+                    let s2 = selectedCards[1].dataset.symbol;
+                    let s3 = selectedCards[2].dataset.symbol;
+
+                    // ✔ Toutes les 3 identiques
+                    if (s1 === s2 && s2 === s3) {
+
                         score++;
                         updateScore();
                         flashEffect("flash-success");
 
-                        firstCard.style.visibility = "hidden";
-                        secondCard.style.visibility = "hidden";
+                        selectedCards.forEach(c => {
+                            c.style.visibility = "hidden";
+                        });
 
-                        checkWin(); // 🏆 Vérifier si gagné
+                        checkWin();
 
                     } else {
+
+                        // ❌ La 3eme ne correspond pas
                         flashEffect("flash-fail");
 
-                        firstCard.classList.remove("flipped");
-                        secondCard.classList.remove("flipped");
-                        firstCard.textContent = "?";
-                        secondCard.textContent = "?";
+                        selectedCards.forEach(c => {
+                            c.classList.remove("flipped");
+                            c.textContent = "?";
+                        });
                     }
 
-                    firstCard = null;
-                    secondCard = null;
+                    selectedCards = [];
                     lock = false;
+
                 }, 700);
             }
+
         });
 
         cards.push(card);
         game.appendChild(card);
     });
 }
+
 
 startGame();
