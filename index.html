@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Game - Home</title>
+
+    <style>
+        /* ---- GLOBAL ---- */
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #6a5acd, #00bcd4);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 3px 3px 8px rgba(0,0,0,0.4);
+        }
+
+        p {
+            font-size: 1.3rem;
+            opacity: 0.9;
+        }
+
+        /* ---- CARDS ---- */
+        .container {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 40px 0;
+            flex-wrap: wrap;
+        }
+
+        .item {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(12px);
+            padding: 20px;
+            border-radius: 15px;
+            width: 280px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+
+        .item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.35);
+        }
+
+        img {
+            width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .item p {
+            margin-top: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        /* Button */
+        button {
+            background: #ffca28;
+            color: #333;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 50px;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+            transition: 0.3s ease;
+        }
+
+        button:hover {
+            transform: scale(1.08);
+            background: #ffd54f;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>🎮 Memory Game</h1>
+    <p>Choose your game mode to begin!</p>
+
+    <div class="container">
+
+        <!-- Mode Solitaire -->
+        <a href="solitaire.html">
+            <div class="item">
+                <img src="./solitaire.jpg" alt="Solitaire Mode">
+                <p>Solitaire</p>
+            </div>
+        </a>
+
+        <!-- Mode Robot -->
+        <a href="robot.html">
+            <div class="item">
+                <img src="./robot.jpeg" alt="Robot Mode">
+                <p>Robot</p>
+            </div>
+        </a>
+
+        <!-- Mode Multijoueur -->
+        <a href="multijoueur.html">
+            <div class="item">
+                <img src="./multijoueur.png" alt="Multiplayer Mode">
+                <p>Multijoueur</p>
+            </div>
+        </a>
+
+    </div>
+
+</body>
+</html>
