@@ -22,7 +22,7 @@ const turnIndicator = document.getElementById("turn-indicator");
 let cards = [];
 
 // Symboles simples pour éviter corruption
-const baseSymbols = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N"];
+const baseSymbols = ["🍎","🍌","🍇","🍒","🍉","🍋","🥝","🍓","🫐","🍍","🥥","🍑"];
 
 function updateLevel() {
     levelLabel.textContent = "Level: " + level;
@@ -36,16 +36,14 @@ function updateScores() {
 function startMusic() {
     if (musicStarted) return;
 
-    music.play().then(() => {
-        musicStarted = true;
-    }).catch(() => {
+    music.play().then(() => { musicStarted = true; })
+    .catch(() => {
         const resume = () => {
             music.play().catch(() => {});
             musicStarted = true;
             document.removeEventListener("click", resume);
             document.removeEventListener("touchstart", resume);
         };
-
         document.addEventListener("click", resume);
         document.addEventListener("touchstart", resume);
     });
@@ -88,7 +86,10 @@ function generateSymbols(level) {
 function checkWin() {
     const remaining = cards.filter(c => c.style.visibility !== "hidden");
     if (remaining.length === 0) {
-        document.getElementById("win-level").textContent = "Level " + level + " Completed!";
+
+        document.getElementById("win-level").textContent =
+            "Level " + level + " Completed!";
+
         document.getElementById("win-who").textContent =
             playerScore > robotScore ? "Winner: PLAYER" :
             robotScore > playerScore ? "Winner: ROBOT" :
@@ -103,7 +104,7 @@ function checkWin() {
     TOUR DU ROBOT — VERSION 3 CARTES
 ========================================================== */
 function robotTurn() {
-    lock = true;heckoiu
+    lock = true;
     setTurn("robot");
 
     setTimeout(() => {
@@ -120,7 +121,6 @@ function robotTurn() {
         let c2 = visible.splice(Math.floor(Math.random() * visible.length), 1)[0];
         let c3 = visible[Math.floor(Math.random() * visible.length)];
 
-        // Montrer c1 & c2
         [c1, c2, c3].forEach(c => {
             c.classList.add("flipped");
             showCardFace(c, true);
@@ -128,10 +128,11 @@ function robotTurn() {
 
         soundFlip.play();
 
-        // Vérifier 2 premières
+        // Vérifier les deux premières
         setTimeout(() => {
+
             if (c1.dataset.symbol !== c2.dataset.symbol) {
-                // ❌ Robot échoue dès les deux premières
+
                 flashEffect("flash-fail");
                 soundFail.play();
 
@@ -147,21 +148,22 @@ function robotTurn() {
 
             // Vérifier les 3
             if (c1.dataset.symbol === c3.dataset.symbol) {
-                // ✔ Robot triple réussi
+
                 robotScore++;
                 updateScores();
                 flashEffect("flash-success");
                 soundWin.play();
 
                 [c1, c2, c3].forEach(c => c.style.visibility = "hidden");
+
                 lock = false;
                 checkWin();
                 setTurn("player");
 
             } else {
-                // ❌ Échec final
-                soundFail.play();
+
                 flashEffect("flash-fail");
+                soundFail.play();
 
                 [c1, c2, c3].forEach(c => {
                     c.classList.remove("flipped");
@@ -184,9 +186,9 @@ function startGame() {
     game.innerHTML = "";
     cards = [];
     selectedCards = [];
+    lock = false;
     playerScore = 0;
     robotScore = 0;
-    lock = false;
 
     updateScores();
     updateLevel();
@@ -195,6 +197,7 @@ function startGame() {
     const symbols = generateSymbols(level);
 
     symbols.forEach(symbol => {
+
         const card = document.createElement("div");
         card.classList.add("card");
         card.dataset.symbol = symbol;
@@ -212,16 +215,14 @@ function startGame() {
 
             selectedCards.push(card);
 
-            // -----------------------------
-            // 1) Vérifier les deux premières
-            // -----------------------------
+            // Vérifier les 2 premières
             if (selectedCards.length === 2) {
 
                 let s1 = selectedCards[0].dataset.symbol;
                 let s2 = selectedCards[1].dataset.symbol;
 
                 if (s1 !== s2) {
-                    // ❌ Échec direct
+
                     lock = true;
 
                     setTimeout(() => {
@@ -236,16 +237,14 @@ function startGame() {
                         selectedCards = [];
                         lock = false;
 
-                        robotTurn();
+                        robotTurn(); // 👈 robot joue
                     }, 600);
                 }
 
                 return;
             }
 
-            // -----------------------------
-            // 2) Vérifier les 3 cartes
-            // -----------------------------
+            // Vérifier 3 cartes
             if (selectedCards.length === 3) {
 
                 lock = true;
@@ -257,7 +256,7 @@ function startGame() {
                     let s3 = selectedCards[2].dataset.symbol;
 
                     if (s1 === s2 && s2 === s3) {
-                        // ✔ Joueur réussit triple
+
                         playerScore++;
                         updateScores();
                         flashEffect("flash-success");
@@ -268,7 +267,7 @@ function startGame() {
                         checkWin();
 
                     } else {
-                        // ❌ Échec joueur → robot joue
+
                         flashEffect("flash-fail");
                         soundFail.play();
 
@@ -277,7 +276,7 @@ function startGame() {
                             showCardFace(c, false);
                         });
 
-                        robotTurn();
+                        robotTurn(); // 👈 robot joue
                     }
 
                     selectedCards = [];
