@@ -1,6 +1,9 @@
 let level = 1;
 let playerScore = 0;
 let robotScore = 0;
+let selectedCards = [];
+let lock = false;
+let musicStarted = false;
 
 const soundFlip = new Audio("flip.mp3");
 const soundWin = new Audio("win.mp3");
@@ -17,38 +20,22 @@ const robotScoreLabel = document.getElementById("robot-score");
 const turnIndicator = document.getElementById("turn-indicator");
 
 let cards = [];
-let firstCard = null;
-let secondCard = null;
-let lock = false;
-let musicStarted = false;
 
-// Symboles simples pour eviter les caracteres corrompus
-const baseSymbols = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P"];
+// Symboles simples pour éviter corruption
+const baseSymbols = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N"];
 
 function updateLevel() {
-    if (levelLabel) levelLabel.textContent = "Level: " + level;
+    levelLabel.textContent = "Level: " + level;
 }
 
 function updateScores() {
-    if (playerScoreLabel) playerScoreLabel.textContent = "Player Score: " + playerScore;
-    if (robotScoreLabel) robotScoreLabel.textContent = "Robot Score: " + robotScore;
-}
-
-function generateSymbols(currentLevel) {
-    const pairs = Math.min(4 + currentLevel, baseSymbols.length);
-    const chosen = baseSymbols.slice(0, pairs);
-    return [...chosen, ...chosen].sort(() => Math.random() - 0.5);
-}
-
-function flashEffect(type) {
-    flash.classList.remove("flash-success", "flash-fail");
-    void flash.offsetWidth;
-    flash.classList.add(type);
-    setTimeout(() => flash.classList.remove(type), 600);
+    playerScoreLabel.textContent = "Player Score: " + playerScore;
+    robotScoreLabel.textContent = "Robot Score: " + robotScore;
 }
 
 function startMusic() {
     if (musicStarted) return;
+
     music.play().then(() => {
         musicStarted = true;
     }).catch(() => {
@@ -58,13 +45,24 @@ function startMusic() {
             document.removeEventListener("click", resume);
             document.removeEventListener("touchstart", resume);
         };
+
         document.addEventListener("click", resume);
         document.addEventListener("touchstart", resume);
     });
 }
 
+function flashEffect(type) {
+    flash.classList.remove("flash-success", "flash-fail");
+    void flash.offsetWidth;
+    flash.classList.add(type);
+    setTimeout(() => flash.classList.remove(type), 600);
+}
+
+function showCardFace(card, up) {
+    card.textContent = up ? card.dataset.symbol : "?";
+}
+
 function setTurn(turn) {
-    if (!turnIndicator) return;
     turnIndicator.classList.remove("player-turn", "robot-turn");
     if (turn === "player") {
         turnIndicator.textContent = "Tour : Joueur";
@@ -75,90 +73,120 @@ function setTurn(turn) {
     }
 }
 
-function showCardFace(card, faceUp) {
-    card.textContent = faceUp ? card.dataset.symbol : "?";
+/* ==========================================================
+    GÉNÉRATION SYMBOLS (TRIPLE)
+========================================================== */
+function generateSymbols(level) {
+    const triple = 6 + level;
+    const chosen = baseSymbols.slice(0, triple);
+    return [...chosen, ...chosen, ...chosen].sort(() => Math.random() - 0.5);
 }
 
-function robotTurn() {
-    lock = true;
-    setTurn("robot");
-
-    setTimeout(() => {
-        const visible = cards.filter(c => c.style.visibility !== "hidden");
-        if (visible.length < 2) {
-            lock = false;
-            setTurn("player");
-            return;
-        }
-
-        const c1 = visible[Math.floor(Math.random() * visible.length)];
-        let c2;
-        do {
-            c2 = visible[Math.floor(Math.random() * visible.length)];
-        } while (c1 === c2);
-
-        c1.classList.add("flipped");
-        c2.classList.add("flipped");
-        showCardFace(c1, true);
-        showCardFace(c2, true);
-        soundFlip.play();
-
-        setTimeout(() => {
-            if (c1.dataset.symbol === c2.dataset.symbol) {
-                robotScore++;
-                updateScores();
-                flashEffect("flash-success");
-                soundWin.play();
-                c1.style.visibility = "hidden";
-                c2.style.visibility = "hidden";
-            } else {
-                soundFail.play();
-                c1.classList.remove("flipped");
-                c2.classList.remove("flipped");
-                showCardFace(c1, false);
-                showCardFace(c2, false);
-            }
-
-            lock = false;
-            checkWin();
-            setTurn("player");
-        }, 700);
-    }, 800);
-}
-
+/* ==========================================================
+    FIN DU NIVEAU
+========================================================== */
 function checkWin() {
     const remaining = cards.filter(c => c.style.visibility !== "hidden");
     if (remaining.length === 0) {
         document.getElementById("win-level").textContent = "Level " + level + " Completed!";
-
-        if (playerScore > robotScore) {
-            document.getElementById("win-who").textContent = "Winner: PLAYER";
-        } else if (robotScore > playerScore) {
-            document.getElementById("win-who").textContent = "Winner: ROBOT";
-        } else {
-            document.getElementById("win-who").textContent = "Match Nul !";
-        }
+        document.getElementById("win-who").textContent =
+            playerScore > robotScore ? "Winner: PLAYER" :
+            robotScore > playerScore ? "Winner: ROBOT" :
+            "Match Nul !";
 
         document.getElementById("win-screen").style.display = "flex";
         soundWin.play();
     }
 }
 
-document.getElementById("next-level-btn").addEventListener("click", () => {
-    document.getElementById("win-screen").style.display = "none";
-    level++;
-    if (level > 10) level = 1;
-    startGame();
-});
+/* ==========================================================
+    TOUR DU ROBOT — VERSION 3 CARTES
+========================================================== */
+function robotTurn() {
+    lock = true;heckoiu
+    setTurn("robot");
 
+    setTimeout(() => {
+        const visible = cards.filter(c => c.style.visibility !== "hidden");
+
+        if (visible.length < 3) {
+            lock = false;
+            setTurn("player");
+            return;
+        }
+
+        // Choix de 3 cartes aléatoires
+        let c1 = visible.splice(Math.floor(Math.random() * visible.length), 1)[0];
+        let c2 = visible.splice(Math.floor(Math.random() * visible.length), 1)[0];
+        let c3 = visible[Math.floor(Math.random() * visible.length)];
+
+        // Montrer c1 & c2
+        [c1, c2, c3].forEach(c => {
+            c.classList.add("flipped");
+            showCardFace(c, true);
+        });
+
+        soundFlip.play();
+
+        // Vérifier 2 premières
+        setTimeout(() => {
+            if (c1.dataset.symbol !== c2.dataset.symbol) {
+                // ❌ Robot échoue dès les deux premières
+                flashEffect("flash-fail");
+                soundFail.play();
+
+                [c1, c2, c3].forEach(c => {
+                    c.classList.remove("flipped");
+                    showCardFace(c, false);
+                });
+
+                lock = false;
+                setTurn("player");
+                return;
+            }
+
+            // Vérifier les 3
+            if (c1.dataset.symbol === c3.dataset.symbol) {
+                // ✔ Robot triple réussi
+                robotScore++;
+                updateScores();
+                flashEffect("flash-success");
+                soundWin.play();
+
+                [c1, c2, c3].forEach(c => c.style.visibility = "hidden");
+                lock = false;
+                checkWin();
+                setTurn("player");
+
+            } else {
+                // ❌ Échec final
+                soundFail.play();
+                flashEffect("flash-fail");
+
+                [c1, c2, c3].forEach(c => {
+                    c.classList.remove("flipped");
+                    showCardFace(c, false);
+                });
+
+                lock = false;
+                setTurn("player");
+            }
+
+        }, 900);
+
+    }, 800);
+}
+
+/* ==========================================================
+    LANCER LE JEU
+========================================================== */
 function startGame() {
     game.innerHTML = "";
     cards = [];
-    firstCard = null;
-    secondCard = null;
-    lock = false;
+    selectedCards = [];
     playerScore = 0;
     robotScore = 0;
+    lock = false;
 
     updateScores();
     updateLevel();
@@ -173,53 +201,103 @@ function startGame() {
         showCardFace(card, false);
 
         card.addEventListener("click", () => {
-            if (lock || card.classList.contains("flipped")) return;
-            startMusic();
 
+            if (lock || card.classList.contains("flipped")) return;
+
+            startMusic();
             soundFlip.play();
+
             card.classList.add("flipped");
             showCardFace(card, true);
 
-            if (!firstCard) {
-                firstCard = card;
+            selectedCards.push(card);
+
+            // -----------------------------
+            // 1) Vérifier les deux premières
+            // -----------------------------
+            if (selectedCards.length === 2) {
+
+                let s1 = selectedCards[0].dataset.symbol;
+                let s2 = selectedCards[1].dataset.symbol;
+
+                if (s1 !== s2) {
+                    // ❌ Échec direct
+                    lock = true;
+
+                    setTimeout(() => {
+                        flashEffect("flash-fail");
+                        soundFail.play();
+
+                        selectedCards.forEach(c => {
+                            c.classList.remove("flipped");
+                            showCardFace(c, false);
+                        });
+
+                        selectedCards = [];
+                        lock = false;
+
+                        robotTurn();
+                    }, 600);
+                }
+
                 return;
             }
 
-            secondCard = card;
-            lock = true;
+            // -----------------------------
+            // 2) Vérifier les 3 cartes
+            // -----------------------------
+            if (selectedCards.length === 3) {
 
-            setTimeout(() => {
-                if (firstCard.dataset.symbol === secondCard.dataset.symbol) {
-                    playerScore++;
-                    updateScores();
-                    flashEffect("flash-success");
-                    soundWin.play();
-                    firstCard.style.visibility = "hidden";
-                    secondCard.style.visibility = "hidden";
+                lock = true;
+
+                setTimeout(() => {
+
+                    let s1 = selectedCards[0].dataset.symbol;
+                    let s2 = selectedCards[1].dataset.symbol;
+                    let s3 = selectedCards[2].dataset.symbol;
+
+                    if (s1 === s2 && s2 === s3) {
+                        // ✔ Joueur réussit triple
+                        playerScore++;
+                        updateScores();
+                        flashEffect("flash-success");
+                        soundWin.play();
+
+                        selectedCards.forEach(c => c.style.visibility = "hidden");
+
+                        checkWin();
+
+                    } else {
+                        // ❌ Échec joueur → robot joue
+                        flashEffect("flash-fail");
+                        soundFail.play();
+
+                        selectedCards.forEach(c => {
+                            c.classList.remove("flipped");
+                            showCardFace(c, false);
+                        });
+
+                        robotTurn();
+                    }
+
+                    selectedCards = [];
                     lock = false;
-                    checkWin();
-                    firstCard = null;
-                    secondCard = null;
-                    setTurn("player");
-                    return;
-                }
 
-                soundFail.play();
-                flashEffect("flash-fail");
-                firstCard.classList.remove("flipped");
-                secondCard.classList.remove("flipped");
-                showCardFace(firstCard, false);
-                showCardFace(secondCard, false);
+                }, 600);
+            }
 
-                firstCard = null;
-                secondCard = null;
-                robotTurn();
-            }, 600);
         });
 
         cards.push(card);
         game.appendChild(card);
     });
 }
+
+document.getElementById("next-level-btn").addEventListener("click", () => {
+    document.getElementById("win-screen").style.display = "none";
+    level++;
+    if (level > 10) level = 1;
+    startGame();
+});
 
 startGame();
